@@ -12,6 +12,7 @@ private:
     int value;
 
 public:
+    Tile() : value(0) {}; //Constructeur par défaut, permet de créer un Tile vide
     Tile(int n){
         value = n;
     };
@@ -45,47 +46,42 @@ constexpr int g_consoleLines{ 25 };
 class Board 
 {
 private:
-    int const n = 16;
-    vector<Tile> board = {};
-    public:
-    
+    Tile board[4][4];
+
+public:
     Board()
     {
-        for (int i = 0; i < n; i++){
-            board.push_back(Tile(i));
+        // Create a fixed size array
+        int compteur = 0;
+        for (int i = 0; i < 4; i++){
+            for (int j = 0; j < 4; j++){
+                board[i][j] = Tile{compteur};
+                compteur++;
+            }
         }
-    }
+    };
 
-    Tile getTile(int j){
-        return board[j];
-    }
+    Tile getTile(int k, int l){
+        return board[k][l];
+    };
+    
 };
 
 
 
 std::ostream& operator<<(std::ostream& out, Board& board)
-{
+{   
+    //Put the board at the bottom of the console
     for (int i = 0; i < g_consoleLines; i++){
         out << '\n';
     }
 
-    for (int i = 1 ; i < 16; i++){
-        if (i%4 == 0){
-            if (board.getTile(i).getNum() <= 9)
-                out << "  "<< board.getTile(i).getNum() << ' ';
-            else if (board.getTile(i).getNum() > 9)
-                out << ' ' << board.getTile(i).getNum() << ' ';
-            else if (board.getTile(i).getNum() == 0)
-                out << "    ";
-            out << '\n';
-        }
-        else{
-            if (board.getTile(i).getNum() <= 9)
-                out << "  " << board.getTile(i).getNum() << ' ';
-            else if (board.getTile(i).getNum() > 9)
-                out << ' ' << board.getTile(i).getNum() << ' ';
-            else if (board.getTile(i).getNum() == 0)
-                out << "    ";
+    for (int i = 0 ; i < 4; i++){
+        for (int j = 0 ; j < 4; j++){
+            out << board.getTile(i, j);
+            if (j%4 == 0){
+                out << '\n';
+            }
         }
     }
     return out;
