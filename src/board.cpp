@@ -87,10 +87,55 @@ std::ostream& operator<<(std::ostream& out, Board& board)
     return out;
 }
 
+class Direction{
+/*
+The user will be entering single-letter (char) commands on the keyboard to slide tiles in cardinal directions (e.g. 'w'=up, 'a'=left). 
+Converting these char commands into a Direction object (representing a cardinal direction) will make our code more intuitive and prevent 
+our code from being littered with char literals (Direction::left is more meaningful than 'a').
+*/
+private:
+public:
+    char userInput;
+
+    void getUserInput(string& command){
+        cout << "\n" << "Enter a command : ";
+        cin >> userInput;
+
+        switch (userInput){
+            case 'w':
+                command = "up";
+                break;
+            case 'a':
+                command = "left";
+                break;
+            case 's':
+                command = "down";
+                break;
+            case 'd':
+                command = "right";
+                break;
+            case 'q':
+                cout << "\n\nBye !\n\n";
+                command = "quit";
+                break;
+            default:
+                cout << "\nInvalid command";
+        }
+        cout << "\nDirection : " << command;
+    };
+};
+
 int main()
 {
     Board board{};
     std::cout << board;
+
+    string command = {}; // pointer to value of command
+    Direction dir;
+
+    while (command != "quit"){
+        dir.getUserInput(command);
+    };
 
     return 0;
 }
