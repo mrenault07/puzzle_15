@@ -94,29 +94,35 @@ Converting these char commands into a Direction object (representing a cardinal 
 our code from being littered with char literals (Direction::left is more meaningful than 'a').
 */
 private:
-public:
     char userInput;
+public:
+    enum Type { up, down, right, left };
+    Type m_type;
+    Direction(Type type) : m_type(type) {}
+
+    Type getType() const {
+        return m_type;
+    }
 
     void getUserInput(string& command){
         cout << "\n" << "Enter a command : ";
         cin >> userInput;
 
         switch (userInput){
-            case 'w':
-                command = "up";
+            case 'w': 
+                m_type = up;
                 break;
             case 'a':
-                command = "left";
+                m_type = left;
                 break;
             case 's':
-                command = "down";
+                m_type = down;
                 break;
             case 'd':
-                command = "right";
+                m_type = right;
                 break;
             case 'q':
-                cout << "\n\nBye !\n\n";
-                command = "quit";
+                cout << "\n\nBye !\n\n"; //TODO: End code
                 break;
             default:
                 cout << "\nInvalid command";
@@ -125,17 +131,67 @@ public:
     };
 };
 
-int main()
-{
-    Board board{};
-    std::cout << board;
-
-    string command = {}; // pointer to value of command
-    Direction dir;
-
-    while (command != "quit"){
-        dir.getUserInput(command);
+class Point{
+private:
+    int x_axis, y_axis;
+public:
+    Point(int x, int y){
+        x_axis = x;
+        y_axis = y;
     };
 
+    Point getAdjacentPoint(Direction dir){
+        switch (dir.getType())
+        {
+        case  Direction::up:
+            return Point{x_axis, y_axis - 1};
+        case  Direction::down:
+            return Point{x_axis, y_axis + 1};
+        case  Direction::left:
+            return Point{x_axis - 1, y_axis};
+        case  Direction::right:
+            return Point{x_axis + 1, y_axis};
+        default:
+            return Point{x_axis, y_axis};
+        }
+    };
+    friend bool operator==(const Point &pt1, const Point &pt2);
+    friend bool operator!=(const Point &pt1, const Point &pt2);
+
+};
+
+// Overload operator ==. On redéfinit l'opérateur == 
+bool operator== (const Point &pt1, const Point &pt2)
+{
+    return (pt1.x_axis == pt2.x_axis &&
+            pt1.y_axis == pt2.y_axis);
+}
+bool operator!= (const Point &pt1, const Point &pt2)
+{
+    return (pt1.x_axis != pt2.x_axis ||
+            pt1.y_axis != pt2.y_axis);
+}
+
+
+int main()
+{
+    // Board board{};
+    // std::cout << board;
+
+    // string command = {}; 
+    // Direction dir;
+
+    // while (command != "quit"){
+    //     dir.getUserInput(command);
+    // };
+
+    std::cout << std::boolalpha;
+    std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::up)    == Point{ 1, 0 }) << '\n';
+    std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::down)  == Point{ 1, 2 }) << '\n';
+    std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::left)  == Point{ 0, 1 }) << '\n';
+    std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::right) == Point{ 2, 1 }) << '\n';
+    std::cout << (Point{ 1, 1 } != Point{ 2, 1 }) << '\n';
+    std::cout << (Point{ 1, 1 } != Point{ 1, 2 }) << '\n';
+    std::cout << !(Point{ 1, 1 } != Point{ 1, 1 }) << '\n';
     return 0;
 }
