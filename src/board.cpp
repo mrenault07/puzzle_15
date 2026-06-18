@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <cstdlib>  // pour rand()
 using namespace std;
 
 
@@ -38,54 +39,7 @@ std::ostream& operator<<(std::ostream& out, const Tile& value)
     return out;
 }
 
-// Increase amount of new lines if your board isn't
-// at the very bottom of the console
-constexpr int g_consoleLines{ 25 };
-//constexpr  = la valeur de la fonction est constante
 
-class Board 
-{
-private:
-    Tile board[4][4];
-
-public:
-    Board()
-    {
-        // Create a fixed size array
-        int compteur = 0;
-        for (int i = 0; i < 4; i++){
-            for (int j = 0; j < 4; j++){
-                board[i][j] = Tile{compteur};
-                compteur++;
-            }
-        }
-    };
-
-    Tile getTile(int k, int l){
-        return board[k][l];
-    };
-    
-};
-
-
-
-std::ostream& operator<<(std::ostream& out, Board& board)
-{   
-    //Put the board at the bottom of the console
-    for (int i = 0; i < g_consoleLines; i++){
-        out << '\n';
-    }
-
-    for (int i = 0 ; i < 4; i++){
-        for (int j = 0 ; j < 4; j++){
-            out << board.getTile(i, j);
-            if (j%4 == 0){
-                out << '\n';
-            }
-        }
-    }
-    return out;
-}
 
 class Direction{
 /*
@@ -104,6 +58,10 @@ public:
         return m_type;
     }
 
+    static Direction getRandomDirection(){ // static = appartient à la classe, pas à l'objet. Donc pas besoin de créer un objet Direction
+        return Direction{ static_cast<Type>(rand() % 4) };
+    }
+     
     void getUserInput(string& command){
         cout << "\n" << "Enter a command : ";
         cin >> userInput;
@@ -129,12 +87,31 @@ public:
         }
         cout << "\nDirection : " << command;
     };
+
+    friend Direction operator-(const Direction &type1);
 };
+// Get opposite direction 
+Direction operator-(const Direction &type1){
+    switch (type1.getType())
+    {
+    case Direction::up: // En dehors de la classe, donc ne pas oublier Direction
+        return Direction{Direction::down};
+    case Direction::down:
+        return Direction{Direction::up};
+    case Direction::left:
+        return Direction{Direction::right};
+    case Direction::right:
+        return Direction{Direction::left};
+    default:
+        return type1;
+    }
+}
+
 
 class Point{
 private:
-    int x_axis, y_axis;
 public:
+    int x_axis, y_axis;
     Point(int x, int y){
         x_axis = x;
         y_axis = y;
@@ -144,13 +121,13 @@ public:
         switch (dir.getType())
         {
         case  Direction::up:
-            return Point{x_axis, y_axis - 1};
-        case  Direction::down:
-            return Point{x_axis, y_axis + 1};
-        case  Direction::left:
             return Point{x_axis - 1, y_axis};
-        case  Direction::right:
+        case  Direction::down:
             return Point{x_axis + 1, y_axis};
+        case  Direction::left:
+            return Point{x_axis, y_axis - 1};
+        case  Direction::right:
+            return Point{x_axis, y_axis + 1};
         default:
             return Point{x_axis, y_axis};
         }
@@ -173,10 +150,115 @@ bool operator!= (const Point &pt1, const Point &pt2)
 }
 
 
+// Increase amount of new lines if your board isn't
+// at the very bottom of the console
+constexpr int g_consoleLines{ 25 };
+//constexpr  = la valeur de la fonction est constante
+
+class Board 
+{
+private:
+public:
+    Tile board[4][4];
+    Board()
+    {
+        // Create a fixed size array
+        int compteur = 1;
+        for (int i = 0; i < 4; i++){
+            for (int j = 0; j < 4; j++){
+                board[i][j] = Tile{compteur};
+                compteur++;
+            }
+        }
+        board[3][3]= Tile{0};
+    };
+
+    Tile getTile(int k, int l){
+        return board[k][l];
+    };
+
+    Point getEmptyPoint(){
+        for (int i = 0; i < 4; i++){
+            for (int j = 0; j < 4; j++){
+                if (getTile(i, j).getNum() == 0){
+                    return Point(i,j);
+                }
+            }
+        }
+        return Point(-1, -1);
+    };
+
+    bool isTileValid(int x, int y){
+        /* Checks if tile exists (not outside the board).*/
+        if ((x < 0 || x > 3) || (y < 0 || y > 3)){
+            cout << "\nInvalid Tile.\n";
+            return false;
+        }
+        return true;
+    }
+
+    Point getOppositePoint(Point empty_point, Direction dir){
+        /* If user ask right, gives the tile at the left of the empty tile. 
+        Same for up and down.*/
+        Direction new_tile_direction{-dir};
+        Point new_tile = empty_point.getAdjacentPoint(new_tile_direction); // Get new tile coordinates
+        int x_new_tile = new_tile.x_axis;
+        int y_new_tile = new_tile.y_axis;
+        return Point(x_new_tile, y_new_tile);
+    };
+
+    void moveTile(Direction dir){
+        // Get empty tile
+        Point empty_point = getEmptyPoint();
+        cout << "\nx : " << empty_point.x_axis;
+        cout << "\ny : " << empty_point.y_axis;
+
+        // Find opposite tile from the direction
+        Point opposite_point = getOppositePoint(empty_point, dir);
+
+        cout << "\nx opposite: " << opposite_point.x_axis;
+        cout << "\ny opposite: " << opposite_point.y_axis;
+        // Check if it's a valid choice (not outside the board)
+        bool valid = isTileValid(opposite_point.x_axis, opposite_point.y_axis);
+        if (!valid){
+            return;
+        }
+        // Swap the tiles
+        std::swap(board[empty_point.x_axis][empty_point.y_axis], board[opposite_point.x_axis][opposite_point.y_axis]);
+    };
+
+    void randomize(){
+        /* Randomize board. It has to be solvable so starts from 
+        the empty tile and randomize direction to swap tiles, wether the random direction is valid or not.*/
+        for (int i = 0; i < 1000; i++){
+            moveTile(Direction::getRandomDirection());
+        }
+    }
+};
+
+std::ostream& operator<<(std::ostream& out, Board& board)
+{   
+    //Put the board at the bottom of the console
+    for (int i = 0; i < g_consoleLines; i++){
+        out << '\n';
+    }
+
+    for (int i = 0 ; i < 4; i++){
+        for (int j = 0 ; j < 4; j++){
+            out << board.getTile(i, j);
+        }
+        out << '\n'; // Retour à la ligne après chaque ligne
+    }
+    return out;
+}
+
+
 int main()
 {
-    // Board board{};
-    // std::cout << board;
+    Board board{};
+    std::cout << board;
+    board.randomize();
+    std::cout << board;
 
     // string command = {}; 
     // Direction dir;
@@ -185,13 +267,13 @@ int main()
     //     dir.getUserInput(command);
     // };
 
-    std::cout << std::boolalpha;
-    std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::up)    == Point{ 1, 0 }) << '\n';
-    std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::down)  == Point{ 1, 2 }) << '\n';
-    std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::left)  == Point{ 0, 1 }) << '\n';
-    std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::right) == Point{ 2, 1 }) << '\n';
-    std::cout << (Point{ 1, 1 } != Point{ 2, 1 }) << '\n';
-    std::cout << (Point{ 1, 1 } != Point{ 1, 2 }) << '\n';
-    std::cout << !(Point{ 1, 1 } != Point{ 1, 1 }) << '\n';
+    // std::cout << std::boolalpha;
+    // std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::up)    == Point{ 1, 0 }) << '\n';
+    // std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::down)  == Point{ 1, 2 }) << '\n';
+    // std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::left)  == Point{ 0, 1 }) << '\n';
+    // std::cout << (Point{ 1, 1 }.getAdjacentPoint(Direction::right) == Point{ 2, 1 }) << '\n';
+    // std::cout << (Point{ 1, 1 } != Point{ 2, 1 }) << '\n';
+    // std::cout << (Point{ 1, 1 } != Point{ 1, 2 }) << '\n';
+    // std::cout << !(Point{ 1, 1 } != Point{ 1, 1 }) << '\n';
     return 0;
 }
