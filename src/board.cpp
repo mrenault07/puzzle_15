@@ -68,10 +68,10 @@ public:
         cin >> userInput;
 
         switch (userInput){
-            case 'w': 
+            case 'z': 
                 m_type = up;
                 break;
-            case 'a':
+            case 'q':
                 m_type = left;
                 break;
             case 's':
@@ -80,7 +80,7 @@ public:
             case 'd':
                 m_type = right;
                 break;
-            case 'q':
+            case 'n':
                 cout << "\n\nBye !\n\n";
                 m_type = quit;
                 break;
@@ -175,6 +175,7 @@ public:
             }
         }
         board[3][3]= Tile{0};
+        valid_board[3][3]= Tile{0};
     }
 
     Tile getTile(int k, int l){
@@ -277,6 +278,6 @@ int main()
         board.moveTile(dir);
         check = board.checkBoard();
     };
-
+    cout << "\n You won !!!.";
     return 0;
 }
